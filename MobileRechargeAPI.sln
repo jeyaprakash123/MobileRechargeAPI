@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33103.184
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MobileRecharge.API", "MobileRecharge.API\MobileRecharge.API.csproj", "{EAFA2702-E2D9-4D08-94A2-12CEF8EED419}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MobileRecharge.Application", "MobileRecharge.Application\MobileRecharge.Application.csproj", "{310D3E8C-983B-4C00-9B26-91DD43F2C05C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MobileRecharge.Domain", "MobileRecharge.Domain\MobileRecharge.Domain.csproj", "{DBB248BE-F34D-4B60-8F65-CE86F843E127}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MobileRecharge.Infrastructure", "MobileRecharge.Infrastructure\MobileRecharge.Infrastructure.csproj", "{CC73FE16-845C-421A-BCA6-CA79F5881111}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MobileRecharge.UnitTests", "MobileRecharge.UnitTests\MobileRecharge.UnitTests.csproj", "{D92FB720-9FE1-48DF-8A38-3A40B11522CB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.Api", "Payment.Api\Payment.Api.csproj", "{C0D442B1-5007-498C-AB98-B0CEF58EA994}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EAFA2702-E2D9-4D08-94A2-12CEF8EED419}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAFA2702-E2D9-4D08-94A2-12CEF8EED419}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAFA2702-E2D9-4D08-94A2-12CEF8EED419}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAFA2702-E2D9-4D08-94A2-12CEF8EED419}.Release|Any CPU.Build.0 = Release|Any CPU
+		{310D3E8C-983B-4C00-9B26-91DD43F2C05C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{310D3E8C-983B-4C00-9B26-91DD43F2C05C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{310D3E8C-983B-4C00-9B26-91DD43F2C05C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{310D3E8C-983B-4C00-9B26-91DD43F2C05C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBB248BE-F34D-4B60-8F65-CE86F843E127}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBB248BE-F34D-4B60-8F65-CE86F843E127}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBB248BE-F34D-4B60-8F65-CE86F843E127}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBB248BE-F34D-4B60-8F65-CE86F843E127}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC73FE16-845C-421A-BCA6-CA79F5881111}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC73FE16-845C-421A-BCA6-CA79F5881111}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC73FE16-845C-421A-BCA6-CA79F5881111}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC73FE16-845C-421A-BCA6-CA79F5881111}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D92FB720-9FE1-48DF-8A38-3A40B11522CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D92FB720-9FE1-48DF-8A38-3A40B11522CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D92FB720-9FE1-48DF-8A38-3A40B11522CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D92FB720-9FE1-48DF-8A38-3A40B11522CB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0D442B1-5007-498C-AB98-B0CEF58EA994}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0D442B1-5007-498C-AB98-B0CEF58EA994}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0D442B1-5007-498C-AB98-B0CEF58EA994}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0D442B1-5007-498C-AB98-B0CEF58EA994}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DBF8C3F8-5ECF-408D-AAF5-B669D0076A1C}
+	EndGlobalSection
+EndGlobal
