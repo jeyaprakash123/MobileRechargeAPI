@@ -84,6 +84,7 @@ builder.Services.AddScoped<IMobileRechargeService, MobileRechargeService>();
 builder.Services.AddScoped<IBeneficiaryRepository, BeneficiaryRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IMobileRechargeRepository, MobileRechargeRepository>();
+builder.Services.AddScoped<Appsettings, Appsettings>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddHttpClient("PaymentApi", client =>

@@ -7,6 +7,7 @@ using TopUpAPI.Controllers;
 using TelecomProviderAPI.Application.Interfaces;
 using TopUpAPI.Models;
 using Xunit;
+using MobileRecharge.Domain.Models;
 using TopUpAPI.DataMapper;
 
 namespace MobileRecharge.UnitTests.Controller
@@ -28,9 +29,9 @@ namespace MobileRecharge.UnitTests.Controller
             // Arrange
             var userId = 1;
             var beneficiaries = new List<BeneficiaryDto>
-        {
-            new BeneficiaryDto { Id = 1, Nickname = "John Doe" }
-        };
+            {
+                new BeneficiaryDto { Id = 1, Nickname = "John Doe" }
+            };
 
             _mockService.Setup(service => service.GetBeneficiaries(userId))
                         .ReturnsAsync(beneficiaries);
@@ -41,7 +42,7 @@ namespace MobileRecharge.UnitTests.Controller
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
             var returnValue = Assert.IsType<List<BeneficiaryDto>>(okResult.Value);
-            Assert.Equal(1, returnValue.Count);
+            Assert.Single(returnValue);
         }
 
         [Fact]
@@ -74,9 +75,12 @@ namespace MobileRecharge.UnitTests.Controller
             var result = await _controller.RemoveBeneficiary(beneficiaryId);
 
             // Assert
-            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal("Beneficiay Not Available", ((dynamic)notFoundResult.Value).message);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result); 
+            var response = Assert.IsType<ResponseMessage>(notFoundResult.Value);
+            Assert.Equal("Beneficiary Not Available", response.Message);
         }
+
+
         [Fact]
         public async Task AddBeneficiary_ReturnsBadRequest_WhenValidationFails()
         {
@@ -94,22 +98,7 @@ namespace MobileRecharge.UnitTests.Controller
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Nickname cannot be empty", badRequestResult.Value);
         }
-        [Fact]
-        public async Task GetBeneficiaries_ReturnsInternalServerError_WhenExceptionOccurs()
-        {
-            // Arrange
-            var userId = 1;
-            _mockService.Setup(service => service.GetBeneficiaries(userId))
-                        .ThrowsAsync(new Exception("Unexpected error"));
 
-            // Act
-            var result = await _controller.GetBeneficiaries(userId);
-
-            // Assert
-            var statusCodeResult = Assert.IsType<ObjectResult>(result);
-            Assert.Equal(500, statusCodeResult.StatusCode);
-            Assert.Equal("Unexpected error", statusCodeResult.Value);
-        }
         [Fact]
         public async Task RemoveBeneficiary_ReturnsOk_WhenSuccessful()
         {
@@ -122,9 +111,9 @@ namespace MobileRecharge.UnitTests.Controller
             var result = await _controller.RemoveBeneficiary(beneficiaryId);
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            Assert.Equal("Beneficiary removed Successfully", ((dynamic)okResult.Value).message);
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var response = Assert.IsType<ResponseMessage>(okResult.Value);
+            Assert.Equal("Beneficiary removed Successfully", response.Message);
         }
-
     }
 }

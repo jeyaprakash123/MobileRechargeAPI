@@ -23,7 +23,7 @@ namespace BalanceApi.Controllers
 
             if (users == null)
             {
-                return NotFound(new { message = "User details not available" });
+                return NotFound(new ResponseMessage { Message = "User details not available" });
             }
             return Ok(users.FirstOrDefault().BalanceAmount);
         }
@@ -41,15 +41,19 @@ namespace BalanceApi.Controllers
             return CreatedAtAction(nameof(GetUser), new { id = createUser.Id }, createUser);
         }
 
-        [HttpPut("update-user-balance")]
+        [HttpPut("make-payment")]
 
         public async Task<ActionResult<Balance>> MakePayment(int userid, [FromBody] PaymentRequest request)
-           // UpdateBalance([FromQuery] int userid, decimal amount)
         {
+            if (request == null)
+            {
+                return BadRequest(new ResponseMessage { Message = "Invalid payment request" });
+            }
+
             var success = await _balanceService.UpdateBalanceAsync(userid,request.TotalAmount);
             if (!success)
-                return NotFound(new { message = "User Not Available" });
-            return Ok(new { message = "User Balance Details Successfully Updated" });
+                return NotFound(new ResponseMessage { Message = "User Not Available" });
+            return Ok(new ResponseMessage { Message = "User Balance Details Successfully Updated" });
         }
     }
 }

@@ -1,120 +1,121 @@
-﻿using Xunit;
-using Moq;
-using AutoMapper;
+﻿using BalanceApi.DataAccess;
 using BalanceApi.Models;
 using BalanceApi.Services;
-using BalanceApi.DataAccess;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Xunit;
 using BalanceApi.DataMapper;
 
 namespace Payment.Api.UnitTests
 {
     public class BalanceServiceTests
     {
-        private readonly Mock<BalanceDbContext> _mockContext;
+        private readonly BalanceDbContext _context;
         private readonly IMapper _mapper;
-        private readonly BalanceService _balanceService;
+        private readonly BalanceService _service;
 
         public BalanceServiceTests()
         {
+            var options = new DbContextOptionsBuilder<BalanceDbContext>()
+                .UseInMemoryDatabase(databaseName: "TestDatabase")
+                .Options;
+
+            _context = new BalanceDbContext(options);
             var config = new MapperConfiguration(cfg =>
             {
                 cfg.CreateMap<Balance, BalanceDto>();
                 cfg.CreateMap<BalanceDto, Balance>();
             });
-
             _mapper = config.CreateMapper();
-            _mockContext = new Mock<BalanceDbContext>(new DbContextOptions<BalanceDbContext>());
-            _balanceService = new BalanceService(_mockContext.Object, _mapper);
-        }
-
-        // Helper method to create a mock DbSet
-        private static Mock<DbSet<T>> CreateMockDbSet<T>(IList<T> list) where T : class
-        {
-            var queryable = list.AsQueryable();
-            var mockSet = new Mock<DbSet<T>>();
-
-            mockSet.As<IQueryable<T>>().Setup(m => m.Provider).Returns(queryable.Provider);
-            mockSet.As<IQueryable<T>>().Setup(m => m.Expression).Returns(queryable.Expression);
-            mockSet.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(queryable.ElementType);
-            mockSet.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(queryable.GetEnumerator());
-
-            mockSet.Setup(m => m.AddAsync(It.IsAny<T>(), default)).Callback<T, CancellationToken>((s, _) => list.Add(s));
-
-            return mockSet;
+            _service = new BalanceService(_context, _mapper);
         }
 
         [Fact]
-        public async Task GetUser_ValidId_ShouldReturnBalanceDtos()
+        public async Task GetUser_ReturnsBalances_ForExistingUser()
         {
             // Arrange
-            int userId = 1;
-            var balances = new List<Balance>
-        {
-            new Balance { Id = 1, UserId = userId, BalanceAmount = 100m },
-            new Balance { Id = 2, UserId = userId, BalanceAmount = 200m }
-        };
-
-            var mockSet = CreateMockDbSet(balances);
-            _mockContext.Setup(c => c.Balances).Returns(mockSet.Object);
+            var userId = 1;
+            _context.Balances.Add(new Balance { Id = 1, UserId = userId, BalanceAmount = 100 });
+            await _context.SaveChangesAsync();
 
             // Act
-            var result = await _balanceService.GetUser(userId);
+            var result = await _service.GetUser(userId);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal(100, result.First().BalanceAmount);
+        }
+
+        [Fact]
+        public async Task CreateUserAsync_AddsNewBalance()
+        {
+            // Arrange
+            var newBalance = new Balance { UserId = 2, BalanceAmount = 200 };
+
+            // Act
+            var result = await _service.CreateUserAsync(newBalance);
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(2, result.Count());
+            Assert.Equal(newBalance.UserId, result.UserId);
+            Assert.Equal(newBalance.BalanceAmount, result.BalanceAmount);
         }
 
         [Fact]
-        public async Task CreateUser_ValidBalance_ShouldReturnBalanceDto()
+        public async Task UpdateBalanceAsync_UpdatesBalance_WhenSufficientFunds()
         {
             // Arrange
-            var balance = new Balance { UserId = 1, BalanceAmount = 100m };
-            var balances = new List<Balance>();
-
-            var mockSet = CreateMockDbSet(balances);
-            _mockContext.Setup(c => c.Balances).Returns(mockSet.Object);
+            var balance = new Balance { Id = 1, UserId = 1, BalanceAmount = 100 };
+            _context.Balances.Add(balance);
+            await _context.SaveChangesAsync();
 
             // Act
-            var result = await _balanceService.CreateUserAsync(balance);
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(balance.BalanceAmount, result.BalanceAmount);
-        }
-
-        [Fact]
-        public async Task UpdateBalance_ValidId_ShouldReturnTrue()
-        {
-            // Arrange
-            int userId = 1;
-            var balance = new Balance { Id = userId, UserId = userId, BalanceAmount = 200m };
-            var balances = new List<Balance> { balance };
-
-            var mockSet = CreateMockDbSet(balances);
-            _mockContext.Setup(c => c.Balances).Returns(mockSet.Object);
-
-            // Act
-            var result = await _balanceService.UpdateBalanceAsync(userId, 50m);
+            var result = await _service.UpdateBalanceAsync(1, 50);
 
             // Assert
             Assert.True(result);
-            Assert.Equal(150m, balances.First().BalanceAmount);
+            var updatedBalance = await _context.Balances.FindAsync(1);
+            Assert.Equal(50, updatedBalance.BalanceAmount);
         }
 
         [Fact]
-        public async Task UpdateBalance_InvalidId_ShouldReturnFalse()
+        public async Task UpdateBalanceAsync_ThrowsException_WhenInsufficientFunds()
         {
             // Arrange
-            int userId = 1;
-            var balances = new List<Balance>();
+            var balance = new Balance { Id = 1, UserId = 1, BalanceAmount = 50 };
+            _context.Balances.Add(balance);
+            await _context.SaveChangesAsync();
 
-            var mockSet = CreateMockDbSet(balances);
-            _mockContext.Setup(c => c.Balances).Returns(mockSet.Object);
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                _service.UpdateBalanceAsync(1, 100));
+            Assert.Equal("Insufficient balance.", exception.Message);
+        }
+
+        [Fact]
+        public async Task UserExists_ReturnsTrue_ForExistingUser()
+        {
+            // Arrange
+            var balance = new Balance { Id = 1, UserId = 1, BalanceAmount = 100 };
+            _context.Balances.Add(balance);
+            await _context.SaveChangesAsync();
 
             // Act
-            var result = await _balanceService.UpdateBalanceAsync(userId, 50m);
+            var result = await _service.UserExists(1);
+
+            // Assert
+            Assert.True(result);
+        }
+
+        [Fact]
+        public async Task UserExists_ReturnsFalse_ForNonExistingUser()
+        {
+            // Act
+            var result = await _service.UserExists(99);
 
             // Assert
             Assert.False(result);

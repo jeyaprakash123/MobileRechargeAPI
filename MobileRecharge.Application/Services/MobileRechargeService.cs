@@ -33,7 +33,33 @@ namespace TelecomProviderAPI.Services
 
         public async Task<bool> TopUpBeneficiary(int userId, int beneficiaryId, decimal amount)
         {
-            await _unitOfWork.MobileRechargeRepository.TopUpBeneficiary(userId, beneficiaryId, amount);
+            if (amount <= 0)
+            {
+                throw new Exception("Invalid top-up amount.");
+            }
+            await _unitOfWork.MobileRechargeRepository.ValidatePlan(amount);
+
+            var user = await _unitOfWork.MobileRechargeRepository.GetUser(userId);
+
+            if (user == null) { throw new Exception("User not found."); }
+           
+            var beneficiary = user.Beneficiaries.FirstOrDefault(b => b.Id == beneficiaryId);
+            if (beneficiary == null) { throw new Exception("Beneficiary not found."); }
+            
+            var totalTopUpsThisMonth = beneficiary.BeneficiaryTopUp
+                .Where(x => x.MonthWise == DateTime.Now.Month && x.YearWise == DateTime.Now.Year)
+                .Sum(x => x.Amount);
+
+            var userTotalTopUpsThisMonth = _unitOfWork.MobileRechargeRepository.CheckUserMonthlyLimit(userId);
+
+            if (!_unitOfWork.MobileRechargeRepository.UserTopUpLimitPerMonth(beneficiaryId, amount, totalTopUpsThisMonth))
+                throw new Exception("User top-up Limit exceed for the beneficiary this month...Please wait until next month");
+
+            // Update user's total top-up amount
+            userTotalTopUpsThisMonth += amount;
+
+            if (userTotalTopUpsThisMonth > user.TotalTopUpLimit)
+                throw new Exception("User Monthly top-up limit exceeded for all beneficiaries.");
 
             var balance = await _unitOfWork.MobileRechargeRepository.GetUserBalance(userId);
 

@@ -1,4 +1,5 @@
 ﻿using TopUpAPI.DataMapper;
+using TopUpAPI.Models;
 
 namespace TelecomProviderAPI.Application.Interfaces
 {

@@ -27,6 +27,11 @@ namespace TelecomProviderAPI.Controllers
         [HttpPost("top-up")]
         public async Task<IActionResult> TopUpBeneficiary(int userId, int beneficiaryId, decimal amount)
         {
+            if (amount <= 0)
+            {
+                return BadRequest("Amount must be greater than zero");
+            }
+
             bool result = await _rechargeService.TopUpBeneficiary(userId, beneficiaryId, amount);
             return result ? Ok("Top-up successful") : BadRequest("Failed to complete top-up");
         }

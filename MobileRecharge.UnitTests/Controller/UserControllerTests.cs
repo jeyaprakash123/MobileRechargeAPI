@@ -6,19 +6,33 @@ using System.Threading.Tasks;
 using TopUpAPI.Controllers;
 using TopUpAPI.Models;
 using TelecomProviderAPI.Application.Interfaces;
+using MobileRecharge.Domain.Configuration;
 using TopUpAPI.DataMapper;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
+using MobileRecharge.Domain.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace MobileRecharge.UnitTests.Controller
 {
     public class UserControllerTests
     {
         private readonly Mock<IUserService> _userServiceMock;
+        private readonly Appsettings _appSettings; // Use concrete class
         private readonly UserController _controller;
 
         public UserControllerTests()
         {
+            // Mock the user service
             _userServiceMock = new Mock<IUserService>();
-            _controller = new UserController(_userServiceMock.Object, null);
+
+            // Create a concrete instance of Appsettings
+            _appSettings = new Appsettings
+            {
+                UserMonthlyTopUpLimit = 100m // Set a test value
+            };
+
+            // Create the controller with the mocked dependencies
+            _controller = new UserController(_userServiceMock.Object, _appSettings);
         }
 
         [Fact]
@@ -38,7 +52,7 @@ namespace MobileRecharge.UnitTests.Controller
         }
 
         [Fact]
-        public async Task GetUser_ExistingId_ReturnsOkResult_WithUser()
+        public async Task GetUser_ExistingId_ReturnsOkResult_WithUserDto()
         {
             // Arrange
             var user = new UserDto { Id = 1, Username = "TestUser" };
@@ -57,7 +71,7 @@ namespace MobileRecharge.UnitTests.Controller
         public async Task CreateUser_ValidUser_ReturnsCreatedResult()
         {
             // Arrange
-            var user = new User { Id = 1, Username = "NewUser", IsVerified = false };
+            var user = new User { Id = 1, Username = "NewUser", IsVerified = false, TotalTopUpLimit = 100m };
             _userServiceMock.Setup(service => service.CreateUserAsync(It.IsAny<User>()))
                             .ReturnsAsync(user);
 
@@ -80,7 +94,25 @@ namespace MobileRecharge.UnitTests.Controller
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
-            Assert.Equal("User Details Successfully Updated", ((dynamic)okResult.Value).message);
+            var response = Assert.IsType<ResponseMessage>(okResult.Value); 
+            Assert.Equal("User Details Successfully Updated", response.Message);
+      
+        }
+
+        [Fact]
+        public async Task UpdateUser_NonExistingId_ReturnsNotFound()
+        {
+            // Arrange
+            _userServiceMock.Setup(service => service.UpdateUserAsync(1, true)).ReturnsAsync(false);
+
+            // Act
+            var result = await _controller.UpdateUser(1, true);
+
+            // Assert
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
+            var response = Assert.IsType<ResponseMessage>(notFoundResult.Value); 
+            Assert.Equal("User Not Available", response.Message);
+            
         }
 
         [Fact]
@@ -94,7 +126,23 @@ namespace MobileRecharge.UnitTests.Controller
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
-            Assert.Equal("User Successfully removed", ((dynamic)okResult.Value).message);
+            var response = Assert.IsType< ResponseMessage> (okResult.Value); 
+            Assert.Equal("User Successfully removed", response.Message);
+        }
+  
+        [Fact]
+        public async Task RemoveUser_NonExistingId_ReturnsNotFound()
+        {
+            // Arrange
+            _userServiceMock.Setup(service => service.DeleteUserAsync(1)).ReturnsAsync(false);
+
+            // Act
+            var result = await _controller.RemoveUser(1);
+
+            // Assert
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
+            var response = Assert.IsType<ResponseMessage>(notFoundResult.Value);
+            Assert.Equal("User Not Available", response.Message);
         }
     }
 }

@@ -6,6 +6,7 @@ using BalanceApi.Services;
 using BalanceApi.Models;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Payment.Api.Models;
 
 namespace Payment.Api.UnitTests
 {
@@ -21,37 +22,57 @@ namespace Payment.Api.UnitTests
         }
 
         [Fact]
-        public async Task UpdateBalance_UserExists_ShouldReturnOk()
+        public async Task MakePayment_UserExists_ShouldReturnOk()
         {
             // Arrange
             int userId = 1;
-            decimal amount = 100m;
-            _mockBalanceService.Setup(s => s.UpdateBalanceAsync(userId, amount)).ReturnsAsync(true);
+            var request = new PaymentRequest { TotalAmount = 100m };
+            _mockBalanceService.Setup(s => s.UpdateBalanceAsync(userId, request.TotalAmount)).ReturnsAsync(true);
 
             // Act
-            var result = await _controller.UpdateBalance(userId, amount);
+            var result = await _controller.MakePayment(userId, request);
 
             // Assert
             var actionResult = Assert.IsType<ActionResult<Balance>>(result);
-            var okResult = Assert.IsType<OkObjectResult>(actionResult);
-            Assert.Equal("User Balance Details Successfully Updated", ((dynamic)okResult.Value).message);
+            var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
+            var response = Assert.IsType<ResponseMessage>(okResult.Value);
+            Assert.Equal("User Balance Details Successfully Updated", response.Message);
         }
 
         [Fact]
-        public async Task UpdateBalance_UserNotFound_ShouldReturnNotFound()
+        public async Task MakePayment_UserNotFound_ShouldReturnNotFound()
         {
             // Arrange
             int userId = 1;
-            decimal amount = 100m;
-            _mockBalanceService.Setup(s => s.UpdateBalanceAsync(userId, amount)).ReturnsAsync(false);
+            var request = new PaymentRequest { TotalAmount = 100m };
+            _mockBalanceService.Setup(s => s.UpdateBalanceAsync(userId, request.TotalAmount)).ReturnsAsync(false);
 
             // Act
-            var result = await _controller.UpdateBalance(userId, amount);
+            var result = await _controller.MakePayment(userId, request);
 
             // Assert
             var actionResult = Assert.IsType<ActionResult<Balance>>(result);
-            var notFoundResult = Assert.IsType<NotFoundObjectResult>(actionResult);
-            Assert.Equal("User Not Available", ((dynamic)notFoundResult.Value).message);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(actionResult.Result);
+            var response = Assert.IsType<ResponseMessage>(notFoundResult.Value);
+            Assert.Equal("User Not Available", response.Message);
         }
+
+        [Fact]
+        public async Task MakePayment_InvalidRequest_ShouldReturnBadRequest()
+        {
+            // Arrange
+            int userId = 1;
+            PaymentRequest request = null; // Invalid request
+
+            // Act
+            var result = await _controller.MakePayment(userId, request);
+
+            // Assert
+            var actionResult = Assert.IsType<ActionResult<Balance>>(result);
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(actionResult.Result);
+            var response = Assert.IsType<ResponseMessage>(badRequestResult.Value);
+            Assert.Equal("Invalid payment request", response.Message);
+        }
+
     }
 }

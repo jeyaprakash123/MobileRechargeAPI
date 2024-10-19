@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Moq;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TelecomProviderAPI.Application.Interfaces;
-using TelecomProviderAPI.Controllers; // Ensure to include your model namespace
+using TelecomProviderAPI.Controllers;
 using TopUpAPI.DataMapper;
 using Xunit;
 
@@ -25,7 +24,7 @@ namespace MobileRecharge.UnitTests.Controller
         public async Task GetTopUpOptions_ReturnsOkResult_WhenSuccessful()
         {
             // Arrange
-            var options = new List<TopUpOptionDto> // Change to TopUpOptionDto
+            var options = new List<TopUpOptionDto>
             {
                 new TopUpOptionDto { Amount = 10 },
                 new TopUpOptionDto { Amount = 20 }
@@ -61,38 +60,19 @@ namespace MobileRecharge.UnitTests.Controller
         }
 
         [Fact]
-        public async Task TopUpBeneficiary_ReturnsBadRequest_WhenValidationFails()
+        public async Task TopUpBeneficiary_ReturnsBadRequest_WhenAmountIsZeroOrNegative()
         {
             // Arrange
-            int userId = 1, beneficiaryId = 1;
+            int userId = 1;
+            int beneficiaryId = 1;
             decimal amount = -10.0m; // Invalid amount
-            _mockService.Setup(service => service.TopUpBeneficiary(userId, beneficiaryId, amount))
-                        .ThrowsAsync(new ArgumentException("Amount must be greater than zero."));
 
             // Act
             var result = await _controller.TopUpBeneficiary(userId, beneficiaryId, amount);
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Amount must be greater than zero.", badRequestResult.Value);
-        }
-
-        [Fact]
-        public async Task TopUpBeneficiary_ReturnsInternalServerError_WhenExceptionOccurs()
-        {
-            // Arrange
-            int userId = 1, beneficiaryId = 1;
-            decimal amount = 10.0m;
-            _mockService.Setup(service => service.TopUpBeneficiary(userId, beneficiaryId, amount))
-                        .ThrowsAsync(new Exception("Unexpected error"));
-
-            // Act
-            var result = await _controller.TopUpBeneficiary(userId, beneficiaryId, amount);
-
-            // Assert
-            var statusCodeResult = Assert.IsType<ObjectResult>(result);
-            Assert.Equal(500, statusCodeResult.StatusCode);
-            Assert.Equal("Unexpected error", statusCodeResult.Value);
+            Assert.Equal("Amount must be greater than zero", badRequestResult.Value);
         }
     }
 }

@@ -34,36 +34,11 @@ namespace TelecomProviderAPI.Infrastructure.Repositories
             return await _context.TopUpOptions.ToListAsync();
         }
 
-        public async Task TopUpBeneficiary(int userId, int beneficiaryId, decimal amount)
+        public async Task<User> GetUser(int userId)
         {
             var user = await _context.Users.AsNoTracking().Include(u => u.Beneficiaries).ThenInclude(b => b.BeneficiaryTopUp)
                 .FirstOrDefaultAsync(u => u.Id == userId);
-            if (user == null) throw new Exception("User not found.");
-
-            var beneficiary = user.Beneficiaries.FirstOrDefault(b => b.Id == beneficiaryId);
-            if (beneficiary == null) throw new Exception("Beneficiary not found.");
-
-            var totalTopUpsThisMonth = beneficiary.BeneficiaryTopUp
-                                 .Where(x => x.BeneficiaryId == beneficiaryId
-                                    && x.MonthWise == DateTime.Now.Month
-                                    && x.YearWise == DateTime.Now.Year)
-                                 .Sum(x => x.Amount);
-
-            var userTotalTopUpsThisMonth = CheckUserMonthlyLimit(userId);
-
-            await ValidatePlan(amount);
-
-            if (!UserTopUpLimitPerMonth(beneficiaryId, amount, totalTopUpsThisMonth))
-                throw new Exception("User top-up Limit exceed for this month...Please wait until next month");
-
-            if (totalTopUpsThisMonth + amount > beneficiary.MonthlyTopUpLimit)
-                throw new Exception("Monthly top-up limit exceeded for this beneficiary.");
-
-            // Update user's total top-up amount
-            userTotalTopUpsThisMonth += amount;
-
-            if (userTotalTopUpsThisMonth > user.TotalTopUpLimit)
-                throw new Exception("Monthly top-up limit exceeded for all beneficiaries.");
+            return user;
         }
 
         public async Task ValidateUserBalance(decimal balance,decimal amount)
@@ -131,7 +106,7 @@ namespace TelecomProviderAPI.Infrastructure.Repositories
         public bool UserTopUpLimitPerMonth(int beneficiaryId, decimal amount, decimal totalTopUpsThisMonth)
         {
             var beneficiary = _context.Beneficiaries.AsNoTracking().FirstOrDefaultAsync(u => u.Id == beneficiaryId);
-            if (totalTopUpsThisMonth + amount > beneficiary.Result.MonthlyTopUpLimit)
+            if (totalTopUpsThisMonth + amount >= beneficiary.Result.MonthlyTopUpLimit)
             {
                 return false;
             }

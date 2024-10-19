@@ -3,6 +3,7 @@ using Serilog;
 using TopUpAPI.Models;
 using TelecomProviderAPI.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using MobileRecharge.Domain.Models;
 
 namespace TopUpAPI.Controllers
 {
@@ -32,19 +33,24 @@ namespace TopUpAPI.Controllers
 
         public async Task<IActionResult> AddBeneficiary(int userId, string nickname)
         {
-
+            if (string.IsNullOrWhiteSpace(nickname))
+            {
+                return BadRequest("Nickname cannot be empty");
+            }
             bool result = await _topUpService.AddBeneficiary(userId, nickname);
             return result ? Ok("Beneficiary added successfully") : BadRequest("Failed to add beneficiary");
 
         }
 
         [HttpDelete("beneficiaryid")]
-        public async Task<ActionResult<Beneficiary>> RemoveBeneficiary(int beneficiaryId)
+        public async Task<ActionResult<ResponseMessage>> RemoveBeneficiary(int beneficiaryId)
         {
             var success = await _topUpService.DeleteBeneficiary(beneficiaryId);
             if (!success)
-                return NotFound(new { message = "Beneficiay Not Available" });
-            return Ok(new { message = "Beneficiary removed Successfully" });
+            {
+                return NotFound(new ResponseMessage { Message = "Beneficiary Not Available" });
+            }
+            return Ok(new ResponseMessage{ Message = "Beneficiary removed Successfully" });
         }
 
     }
